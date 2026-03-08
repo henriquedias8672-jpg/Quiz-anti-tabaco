@@ -1,0 +1,432 @@
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Anti-Smoking Awareness Quiz</title>  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <style>  
+  
+body{  
+font-family:Arial, sans-serif;  
+background:linear-gradient(135deg,#141e30,#243b55);  
+display:flex;  
+justify-content:center;  
+align-items:center;  
+height:100vh;  
+margin:0;  
+color:white;  
+}  
+  
+.container{  
+width:700px;  
+max-width:95%;  
+background:rgba(0,0,0,0.85);  
+padding:30px;  
+border-radius:15px;  
+text-align:center;  
+box-shadow:0 0 30px rgba(0,0,0,0.6);  
+}  
+  
+h1{  
+color:#00ffd5;  
+}  
+  
+.card{  
+background:#1f2c3c;  
+padding:25px;  
+border-radius:12px;  
+margin-top:15px;  
+animation:fadeIn 0.4s;  
+}  
+  
+button{  
+width:90%;  
+padding:12px;  
+margin:8px auto;  
+border:none;  
+border-radius:8px;  
+cursor:pointer;  
+font-size:16px;  
+transition:0.25s;  
+}  
+  
+button:hover{  
+transform:scale(1.05);  
+}  
+  
+.answer{  
+background:#34495e;  
+color:white;  
+}  
+  
+.correct{  
+background:#2ecc71 !important;  
+}  
+  
+.wrong{  
+background:#e74c3c !important;  
+}  
+  
+#startBtn{  
+background:#00ffd5;  
+color:black;  
+font-weight:bold;  
+}  
+  
+#restartBtn{  
+background:orange;  
+color:black;  
+}  
+  
+.hidden{  
+display:none;  
+}  
+  
+#progressBar{  
+width:100%;  
+height:10px;  
+background:#555;  
+border-radius:10px;  
+overflow:hidden;  
+margin-bottom:15px;  
+}  
+  
+#progress{  
+height:10px;  
+width:0%;  
+background:#00ffd5;  
+}  
+  
+#timer{  
+margin-top:10px;  
+}  
+  
+#score{  
+margin-top:10px;  
+font-size:18px;  
+}  
+  
+canvas{  
+margin-top:20px;  
+}  
+  
+@keyframes fadeIn{  
+from{opacity:0;transform:translateY(15px)}  
+to{opacity:1;transform:translateY(0)}  
+}  
+  
+</style>  </head>  <body>  <div class="container">  <h1>🚭 Anti-Smoking Quiz</h1>  <div id="startScreen">  <p>  
+Test your knowledge about the risks of tobacco and how to stop smoking.  
+</p>  <p>  
+📚 12 Questions    
+⏱️ 30 seconds per question    
+📊 Performance report  
+</p>  <button id="startBtn" onclick="startQuiz()">Start Quiz</button>
+
+</div>  <div id="quizScreen" class="hidden">  <div id="progressBar">  
+<div id="progress"></div>  
+</div>  <div id="questionNumber"></div>  <div class="card">  <h2 id="question"></h2>  <div id="answers"></div>  </div>  <div id="timer"></div>  <div id="score">Score: 0</div>  </div>  <div id="endScreen" class="hidden">  <h2>Quiz Completed 🎉</h2>  <p id="finalScore"></p>  <p id="feedback"></p>  <canvas id="resultChart"></canvas>
+
+<button id="restartBtn" onclick="restartQuiz()">Play Again</button>
+
+</div>  </div>  <script>  
+  
+const startSound=new Audio("https://cdn.pixabay.com/audio/2022/03/24/audio_3f2c07e0d7.mp3");  
+const correctSound=new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7f7c8c8f9c.mp3");  
+const wrongSound=new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3");  
+const finishSound=new Audio("https://cdn.pixabay.com/audio/2022/03/26/audio_4e4f9f7e91.mp3");  
+  
+  
+const questions=[  
+  
+{  
+question:"What plant is tobacco mainly derived from?",  
+answers:["Nicotiana tabacum","Cannabis sativa","Camellia sinensis","Eucalyptus"],  
+correct:0  
+},  
+  
+{  
+question:"Which addictive substance exists in tobacco?",  
+answers:["Nicotine","Vitamin C","Glucose","Protein"],  
+correct:0  
+},  
+  
+{  
+question:"Which toxic substances are found in cigarette smoke?",  
+answers:["Tar and carbon monoxide","Only oxygen","Only water vapor","Vitamins"],  
+correct:0  
+},  
+  
+{  
+question:"Nicotine can cause addiction in:",  
+answers:["A few weeks","10 years","Never","Only elderly"],  
+correct:0  
+},  
+  
+{  
+question:"Which disease is strongly linked to smoking?",  
+answers:["Lung cancer","Stronger lungs","Better memory","Faster healing"],  
+correct:0  
+},  
+  
+{  
+question:"Smoking can cause which respiratory diseases?",  
+answers:["COPD and chronic bronchitis","Asthma cure","Healthy lungs","None"],  
+correct:0  
+},  
+  
+{  
+question:"Smoking increases risk of:",  
+answers:["Heart attack and stroke","Heart strength","Better circulation","None"],  
+correct:0  
+},  
+  
+{  
+question:"Smokers live on average:",  
+answers:["10 years less","20 years more","Same life expectancy","5 years more"],  
+correct:0  
+},  
+  
+{  
+question:"Which region has the largest number of smokers?",  
+answers:["Asia","Oceania","South America","Antarctica"],  
+correct:0  
+},  
+  
+{  
+question:"What can help reduce nicotine withdrawal symptoms?",  
+answers:["Nicotine replacement therapy","Candy","Coffee","Sugar"],  
+correct:0  
+},  
+  
+{  
+question:"Which medicines may help stop smoking?",  
+answers:["Varenicline and Bupropion","Antibiotics","Painkillers","Vitamin C"],  
+correct:0  
+},  
+  
+{  
+question:"Combining medication with psychological support:",  
+answers:["Increases chances of quitting","Makes no difference","Is harmful","Is unnecessary"],  
+correct:0  
+}  
+  
+];  
+  
+let current=0;  
+let score=0;  
+let timer;  
+let timeLeft=30;  
+  
+  
+function shuffleArray(array){  
+for(let i=array.length-1;i>0;i--){  
+const j=Math.floor(Math.random()*(i+1));  
+[array[i],array[j]]=[array[j],array[i]];  
+}  
+}  
+  
+  
+function startQuiz(){  
+  
+startSound.play();  
+  
+shuffleArray(questions);  
+  
+document.getElementById("startScreen").classList.add("hidden");  
+document.getElementById("quizScreen").classList.remove("hidden");  
+  
+loadQuestion();  
+  
+}  
+  
+  
+function loadQuestion(){  
+  
+clearInterval(timer);  
+  
+timeLeft=30;  
+  
+const q=questions[current];  
+  
+document.getElementById("question").innerText=q.question;  
+  
+document.getElementById("questionNumber").innerText=  
+"Question "+(current+1)+" / "+questions.length;  
+  
+const answersDiv=document.getElementById("answers");  
+answersDiv.innerHTML="";  
+  
+let answers=q.answers.map((a,i)=>({  
+text:a,  
+correct:i===q.correct  
+}));  
+  
+shuffleArray(answers);  
+  
+answers.forEach((answer)=>{  
+  
+const btn=document.createElement("button");  
+  
+btn.innerText=answer.text;  
+  
+btn.classList.add("answer");  
+  
+btn.onclick=()=>checkAnswer(answer.correct,btn);  
+  
+answersDiv.appendChild(btn);  
+  
+});  
+  
+updateProgress();  
+startTimer();  
+  
+}  
+  
+  
+function startTimer(){  
+  
+document.getElementById("timer").innerText="Time: "+timeLeft+"s";  
+  
+timer=setInterval(()=>{  
+  
+timeLeft--;  
+  
+document.getElementById("timer").innerText="Time: "+timeLeft+"s";  
+  
+if(timeLeft<=0){  
+  
+clearInterval(timer);  
+nextQuestion();  
+  
+}  
+  
+},1000);  
+  
+}  
+  
+  
+function checkAnswer(isCorrect,btn){  
+  
+clearInterval(timer);  
+  
+const buttons=document.querySelectorAll(".answer");  
+  
+buttons.forEach(b=>b.disabled=true);  
+  
+if(isCorrect){  
+  
+btn.classList.add("correct");  
+  
+score++;  
+  
+correctSound.play();  
+  
+}else{  
+  
+btn.classList.add("wrong");  
+  
+wrongSound.play();  
+  
+}  
+  
+document.getElementById("score").innerText="Score: "+score;  
+  
+setTimeout(nextQuestion,1200);  
+  
+}  
+  
+  
+function nextQuestion(){  
+  
+current++;  
+  
+if(current<questions.length){  
+  
+loadQuestion();  
+  
+}else{  
+  
+showResult();  
+  
+}  
+  
+}  
+  
+  
+function updateProgress(){  
+  
+const percent=(current/questions.length)*100;  
+  
+document.getElementById("progress").style.width=percent+"%";  
+  
+}  
+  
+  
+function showResult(){  
+  
+finishSound.play();  
+  
+document.getElementById("quizScreen").classList.add("hidden");  
+document.getElementById("endScreen").classList.remove("hidden");  
+  
+document.getElementById("finalScore").innerText=  
+"Score: "+score+" / "+questions.length;  
+  
+let feedback="";  
+  
+if(score<=4)  
+feedback="⚠️ You should learn more about tobacco risks.";  
+  
+else if(score<=8)  
+feedback="👍 Good knowledge about smoking risks.";  
+  
+else  
+feedback="🏆 Excellent awareness about tobacco dangers!";  
+  
+document.getElementById("feedback").innerText=feedback;  
+  
+createChart();  
+  
+}  
+  
+  
+function createChart(){  
+  
+new Chart(document.getElementById("resultChart"),{  
+  
+type:"doughnut",  
+  
+data:{  
+labels:["Correct","Incorrect"],  
+datasets:[{  
+data:[score,questions.length-score],  
+backgroundColor:["#2ecc71","#e74c3c"]  
+}]  
+},  
+  
+options:{  
+plugins:{  
+legend:{  
+labels:{color:"white"}  
+}  
+}  
+  
+}  
+  
+});  
+  
+}  
+  
+  
+function restartQuiz(){  
+  
+current=0;  
+score=0;  
+  
+document.getElementById("endScreen").classList.add("hidden");  
+document.getElementById("startScreen").classList.remove("hidden");  
+  
+document.getElementById("score").innerText="Score: 0";  
+  
+}  
+  
+</script>  </body>  
+</html>
